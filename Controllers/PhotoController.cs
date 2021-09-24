@@ -42,7 +42,6 @@ namespace PhotoInfoApi.Controllers
         }
 
         // PUT: api/Photo/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
         public async Task<IActionResult> PutPhoto(long id, Photo photo)
         {
@@ -73,11 +72,13 @@ namespace PhotoInfoApi.Controllers
         }
 
         // POST: api/Photo
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
         public async Task<ActionResult<Photo>> PostPhoto(Photo photo)
         {
+            photo.Hash = Guid.NewGuid().ToString("N");
+
             _context.Photo.Add(photo);
+
             await _context.SaveChangesAsync();
 
             return CreatedAtAction("GetPhoto", new { id = photo.Id }, photo);

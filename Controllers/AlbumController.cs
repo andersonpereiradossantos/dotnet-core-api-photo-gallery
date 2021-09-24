@@ -24,7 +24,7 @@ namespace PhotoInfoApi.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Album>>> GetAlbum()
         {
-            return await _context.Album.ToListAsync();
+            return await _context.Album.Include(x=>x.Photos).ToListAsync();
         }
 
         // GET: api/Album/5
