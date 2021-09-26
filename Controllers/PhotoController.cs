@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -14,10 +17,14 @@ namespace PhotoInfoApi.Controllers
     public class PhotoController : ControllerBase
     {
         private readonly ApiDbContext _context;
+        private static IWebHostEnvironment _webHostEnvironment;
+        private static string path;
 
-        public PhotoController(ApiDbContext context)
+        public PhotoController(ApiDbContext context, IWebHostEnvironment webHostEnvironment)
         {
             _context = context;
+            _webHostEnvironment = webHostEnvironment;
+            path = $"{_webHostEnvironment.WebRootPath}\\upload\\";
         }
 
         // GET: api/Photo
@@ -73,36 +80,138 @@ namespace PhotoInfoApi.Controllers
 
         // POST: api/Photo
         [HttpPost]
-        public async Task<ActionResult<Photo>> PostPhoto(Photo photo)
+        public async Task<ActionResult<Photo>> PostPhoto([FromForm] Photo photo)
         {
-            photo.Hash = Guid.NewGuid().ToString("N");
+            try
+            {
+                photo.Name = photo.File.FileName;
+                photo.Extension = Path.GetExtension(photo.File.FileName);
+                photo.MimeType = photo.File.ContentType;
+                photo.Hash = Guid.NewGuid().ToString("N");
 
-            _context.Photo.Add(photo);
+                Album album = await _context.Album.FindAsync(photo.AlbumId);
 
-            await _context.SaveChangesAsync();
+                this.UploadFile(photo.File, photo.Hash, album.Hash);
 
-            return CreatedAtAction("GetPhoto", new { id = photo.Id }, photo);
+                _context.Photo.Add(photo);
+
+                await _context.SaveChangesAsync();
+
+                return CreatedAtAction("GetPhoto", new { id = photo.Id }, photo);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            }
         }
 
         // DELETE: api/Photo/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeletePhoto(long id)
         {
-            var photo = await _context.Photo.FindAsync(id);
-            if (photo == null)
+            try
             {
-                return NotFound();
+                var photo = await _context.Photo
+                    .Include(x => x.Album)
+                    .FirstOrDefaultAsync(x => x.Id == id);
+
+                if (photo == null)
+                {
+                    return NotFound();
+                }
+
+                System.IO.File.Delete($"{path}{photo.Album.Hash}\\{photo.Hash}");
+                System.IO.File.Delete($"{path}{photo.Album.Hash}\\{photo.Hash}.thumb");
+
+                _context.Photo.Remove(photo);
+
+                await _context.SaveChangesAsync();
+
+                return NoContent();
             }
-
-            _context.Photo.Remove(photo);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            }
         }
 
         private bool PhotoExists(long id)
         {
             return _context.Photo.Any(e => e.Id == id);
+        }
+
+        private void UploadFile([FromForm] IFormFile objetctFile, string hash, string albumPath)
+        {
+            try
+            {
+                if (objetctFile.Length > 0)
+                {
+
+                    if (!Directory.Exists(albumPath))
+                    {
+                        Directory.CreateDirectory(albumPath);
+                    }
+
+                    using (FileStream fileStream = System.IO.File.Create($"{path}{albumPath}\\{hash}"))
+                    {
+                        objetctFile.CopyTo(fileStream);
+                        fileStream.Flush();
+
+                        Image image = Image.FromStream(fileStream);
+
+                        Image thumb = image.GetThumbnailImage(120, 120, () => false, IntPtr.Zero);
+
+                        thumb.Save(Path.ChangeExtension($"{path}{albumPath}\\{hash}", "thumb"));
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Uploaded fail: {ex.Message}");
+            }
+        }
+
+        [HttpGet("DownloadFile/{id}")]
+        public async Task<ActionResult> DownloadFile([FromRoute] long id)
+        {
+            try
+            {
+                var photo = await _context.Photo
+                    .Include(x => x.Album)
+                    .FirstOrDefaultAsync(x => x.Id == id);
+
+                if (!PhotoExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    MemoryStream memory = new MemoryStream();
+                    using (var stream = new FileStream($"{path}{photo.Album.Hash}\\{photo.Hash}", FileMode.Open))
+                    {
+                        await stream.CopyToAsync(memory);
+                    }
+                    memory.Position = 0;
+
+                    return File(memory, GetExtension()[photo.Extension.ToLower()], photo.Name);
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            }
+        }
+
+        private Dictionary<string, string> GetExtension()
+        {
+            return new Dictionary<string, string>
+            {
+                {".jpg", "image/jpeg" },
+                {".jpeg", "image/jpeg" },
+                {".png", "image/png" },
+                {".gif", "image/gif" },
+                {".tiff", "image/tiff" }
+            };
         }
     }
 }

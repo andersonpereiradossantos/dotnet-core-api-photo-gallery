@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -13,11 +15,19 @@ namespace PhotoInfoApi.Controllers
     [ApiController]
     public class AlbumController : ControllerBase
     {
-        private readonly ApiDbContext _context;
+        private readonly ApiDbContext _context; 
+        
+        private static IWebHostEnvironment _webHostEnvironment;
 
-        public AlbumController(ApiDbContext context)
+        private static string path;
+
+        public AlbumController(ApiDbContext context, IWebHostEnvironment webHostEnvironment)
         {
             _context = context;
+            
+            _webHostEnvironment = webHostEnvironment;
+
+            path = $"{_webHostEnvironment.WebRootPath}\\upload\\";
         }
 
         // GET: api/Album
@@ -42,7 +52,6 @@ namespace PhotoInfoApi.Controllers
         }
 
         // PUT: api/Album/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
         public async Task<IActionResult> PutAlbum(long id, Album album)
         {
@@ -73,30 +82,50 @@ namespace PhotoInfoApi.Controllers
         }
 
         // POST: api/Album
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
         public async Task<ActionResult<Album>> PostAlbum(Album album)
         {
-            _context.Album.Add(album);
-            await _context.SaveChangesAsync();
+            try
+            {
+                album.Hash = Guid.NewGuid().ToString("N");
+            
+                Directory.CreateDirectory($"{path}{album.Hash}");
+            
+                _context.Album.Add(album);
 
-            return CreatedAtAction("GetAlbum", new { id = album.Id }, album);
+                await _context.SaveChangesAsync();
+
+                return CreatedAtAction("GetAlbum", new { id = album.Id }, album);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            }
         }
 
         // DELETE: api/Album/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteAlbum(long id)
         {
-            var album = await _context.Album.FindAsync(id);
-            if (album == null)
+            try
             {
-                return NotFound();
+                var album = await _context.Album.FindAsync(id);
+                if (album == null)
+                {
+                    return NotFound();
+                }
+
+                System.IO.Directory.Delete($"{path}{album.Hash}", true);
+
+                _context.Album.Remove(album);
+                await _context.SaveChangesAsync();
+
+                return StatusCode(StatusCodes.Status200OK);
             }
-
-            _context.Album.Remove(album);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            }
         }
 
         private bool AlbumExists(long id)

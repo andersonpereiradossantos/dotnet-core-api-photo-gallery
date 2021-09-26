@@ -11,6 +11,7 @@ namespace PhotoInfoApi.Models
         [Key]
         public long Id { get; set; }
         public string Name { get; set; }
+        public string Hash { get; set; }
         public DateTime DateCreate { get; set; } = DateTime.Now;
         public IList<Photo> Photos { get; set; }
     }

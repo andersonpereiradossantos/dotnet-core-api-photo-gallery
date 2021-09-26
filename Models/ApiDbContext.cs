@@ -15,5 +15,12 @@ namespace PhotoInfoApi.Models
 
         public DbSet<Album> Album { get; set; }
         public DbSet<Photo> Photo { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Photo>()
+                .HasOne(s => s.Album)
+                .WithMany(c => c.Photos);
+        }
     }
 }

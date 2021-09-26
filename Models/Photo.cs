@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Http;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -15,8 +16,11 @@ namespace PhotoInfoApi.Models
         public DateTime DateCreate { get; set; } = DateTime.Now;
         public string MimeType { get; set; }
         public string Hash { get; set; }
+        [NotMapped]
+        public IFormFile File { get; set; }
         public long AlbumId { get; set; }
         [ForeignKey("AlbumId")]
-        public Album Album { get; }
+        public virtual Album Album { get; }
+        public string Extension { get; internal set; }
     }
 }

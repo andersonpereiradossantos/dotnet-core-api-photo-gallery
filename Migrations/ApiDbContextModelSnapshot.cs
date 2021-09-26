@@ -26,12 +26,15 @@ namespace PhotoInfoApi.Migrations
                     b.Property<DateTime>("DateCreate")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<string>("Hash")
+                        .HasColumnType("longtext");
+
                     b.Property<string>("Name")
                         .HasColumnType("longtext");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Albums");
+                    b.ToTable("Album");
                 });
 
             modelBuilder.Entity("PhotoInfoApi.Models.Photo", b =>
@@ -46,6 +49,9 @@ namespace PhotoInfoApi.Migrations
                     b.Property<DateTime>("DateCreate")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<string>("Extension")
+                        .HasColumnType("longtext");
+
                     b.Property<string>("Hash")
                         .HasColumnType("longtext");
 
@@ -59,7 +65,7 @@ namespace PhotoInfoApi.Migrations
 
                     b.HasIndex("AlbumId");
 
-                    b.ToTable("Photos");
+                    b.ToTable("Photo");
                 });
 
             modelBuilder.Entity("PhotoInfoApi.Models.Photo", b =>
