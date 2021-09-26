@@ -30,9 +30,16 @@ namespace PhotoInfoApi
         {
             string mySqlConnection = Configuration.GetConnectionString("DefaultConnection");
 
-            services.AddDbContextPool<ApiDbContext>(options => 
-                        options.UseMySql(mySqlConnection, 
+            services.AddDbContextPool<ApiDbContext>(options =>
+                        options.UseMySql(mySqlConnection,
                             ServerVersion.AutoDetect(mySqlConnection)));
+
+            services.AddCors(o => o.AddPolicy("MyPolicy", builder =>
+            {
+                builder.AllowAnyOrigin()
+                       .AllowAnyMethod()
+                       .AllowAnyHeader();
+            }));
 
             services.AddControllers();
             services.AddSwaggerGen(c =>
@@ -50,6 +57,20 @@ namespace PhotoInfoApi
                 app.UseSwagger();
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "PhotoInfoApi v1"));
             }
+
+            //app.UseCors("MyPolicy");
+
+            app.UseCors(opts =>
+            {
+                opts.WithOrigins(new string[]
+                {
+                    "http://localhost:4200"
+                });
+
+                opts.AllowAnyHeader();
+                opts.AllowAnyMethod();
+                opts.AllowCredentials();
+            });
 
             app.UseHttpsRedirection();
 

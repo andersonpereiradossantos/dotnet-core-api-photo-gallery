@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -34,14 +35,25 @@ namespace PhotoInfoApi.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Album>>> GetAlbum()
         {
-            return await _context.Album.Include(x=>x.Photos).ToListAsync();
+            try
+            {
+                List<Album> albums = await _context.Album.Include(x => x.Photos.Where(p=>p.Cover == true)).ToListAsync();
+
+                return albums;
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            }
         }
 
         // GET: api/Album/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Album>> GetAlbum(long id)
         {
-            var album = await _context.Album.FindAsync(id);
+            var album = await _context.Album
+                .Include(x => x.Photos)
+                .FirstOrDefaultAsync(x => x.Id == id);
 
             if (album == null)
             {

@@ -21,6 +21,10 @@ namespace PhotoInfoApi.Models
             modelBuilder.Entity<Photo>()
                 .HasOne(s => s.Album)
                 .WithMany(c => c.Photos);
+
+            modelBuilder.Entity<Album>()
+                .HasMany(s => s.Photos)
+                .WithOne(c => c.Album);
         }
     }
 }

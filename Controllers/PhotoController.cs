@@ -4,6 +4,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -31,7 +32,9 @@ namespace PhotoInfoApi.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Photo>>> GetPhoto()
         {
-            return await _context.Photo.ToListAsync();
+            return await _context.Photo
+                    .Include(x => x.Album)
+                    .ToListAsync();
         }
 
         // GET: api/Photo/5
@@ -39,6 +42,20 @@ namespace PhotoInfoApi.Controllers
         public async Task<ActionResult<Photo>> GetPhoto(long id)
         {
             var photo = await _context.Photo.FindAsync(id);
+
+            if (photo == null)
+            {
+                return NotFound();
+            }
+
+            return photo;
+        }
+
+        // GET: api/Photo/5
+        [HttpGet("Album/{id}")]
+        public async Task<ActionResult<List<Photo>>> GetPhotoByAlbum(long id)
+        {
+            List<Photo> photo = await _context.Photo.Where(x=>x.AlbumId == id).ToListAsync();
 
             if (photo == null)
             {
@@ -146,7 +163,6 @@ namespace PhotoInfoApi.Controllers
             {
                 if (objetctFile.Length > 0)
                 {
-
                     if (!Directory.Exists(albumPath))
                     {
                         Directory.CreateDirectory(albumPath);
@@ -155,13 +171,13 @@ namespace PhotoInfoApi.Controllers
                     using (FileStream fileStream = System.IO.File.Create($"{path}{albumPath}\\{hash}"))
                     {
                         objetctFile.CopyTo(fileStream);
+
                         fileStream.Flush();
 
-                        Image image = Image.FromStream(fileStream);
-
-                        Image thumb = image.GetThumbnailImage(120, 120, () => false, IntPtr.Zero);
-
-                        thumb.Save(Path.ChangeExtension($"{path}{albumPath}\\{hash}", "thumb"));
+                        using (Image image = Image.FromStream(fileStream))
+                        {
+                            new Bitmap(image, 250, (int)(250 * ((float)image.Height / (float)image.Width))).Save(Path.ChangeExtension($"{path}{albumPath}\\{hash}", "thumb"));
+                        }
                     }
                 }
             }
@@ -171,14 +187,21 @@ namespace PhotoInfoApi.Controllers
             }
         }
 
-        [HttpGet("DownloadFile/{id}")]
-        public async Task<ActionResult> DownloadFile([FromRoute] long id)
+        [HttpGet("DownloadFile/{id}/{thumb?}")]
+        public async Task<ActionResult> DownloadFile([FromRoute] long id, int thumb = 0)
         {
             try
             {
                 var photo = await _context.Photo
                     .Include(x => x.Album)
                     .FirstOrDefaultAsync(x => x.Id == id);
+
+                string file = $"{path}{photo.Album.Hash}\\{photo.Hash}";
+
+                if (thumb == 1)
+                {
+                    file = $"{file}.thumb";
+                }
 
                 if (!PhotoExists(id))
                 {
@@ -187,7 +210,7 @@ namespace PhotoInfoApi.Controllers
                 else
                 {
                     MemoryStream memory = new MemoryStream();
-                    using (var stream = new FileStream($"{path}{photo.Album.Hash}\\{photo.Hash}", FileMode.Open))
+                    using (var stream = new FileStream(file, FileMode.Open))
                     {
                         await stream.CopyToAsync(memory);
                     }
