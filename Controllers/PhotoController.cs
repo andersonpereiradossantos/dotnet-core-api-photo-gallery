@@ -53,16 +53,19 @@ namespace PhotoInfoApi.Controllers
 
         // GET: api/Photo/5
         [HttpGet("Album/{id}")]
-        public async Task<ActionResult<List<Photo>>> GetPhotoByAlbum(long id)
+        public async Task<ActionResult<Album>> GetPhotoByAlbum(long id)
         {
-            List<Photo> photo = await _context.Photo.Where(x=>x.AlbumId == id).ToListAsync();
+            Album album = await _context.Album
+                .Include(x => x.Photos)
+                .OrderBy(x=>x.DateCreate)
+                .FirstOrDefaultAsync(x => x.Id == id);
 
-            if (photo == null)
+            if (album == null)
             {
                 return NotFound();
             }
 
-            return photo;
+            return album;
         }
 
         // PUT: api/Photo/5
@@ -75,6 +78,11 @@ namespace PhotoInfoApi.Controllers
             }
 
             _context.Entry(photo).State = EntityState.Modified;
+            _context.Entry(photo).Property(x => x.AlbumId).IsModified = false;
+            _context.Entry(photo).Property(x => x.Cover).IsModified = false;
+            _context.Entry(photo).Property(x => x.Extension).IsModified = false;
+            _context.Entry(photo).Property(x => x.Hash).IsModified = false;
+            _context.Entry(photo).Property(x => x.MimeType).IsModified = false;
 
             try
             {
@@ -95,26 +103,71 @@ namespace PhotoInfoApi.Controllers
             return NoContent();
         }
 
+        // PUT: api/Photo/5
+        [HttpPut("SetCoverAlbum/{id}")]
+        public async Task<IActionResult> SetCoverAlbum(long id)
+        {                        
+            try
+            {
+                Photo photoOld = await _context.Photo.Where(x=>x.Cover == true).FirstOrDefaultAsync();
+                
+                if(photoOld != null)
+                {
+                    photoOld.Cover = false;
+                }
+
+                Photo photoNew = await _context.Photo.FindAsync(id);
+
+                photoNew.Cover = true;
+
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!PhotoExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
+        }
+
         // POST: api/Photo
         [HttpPost]
-        public async Task<ActionResult<Photo>> PostPhoto([FromForm] Photo photo)
+        public async Task<ActionResult<Photo>> PostPhoto()
         {
             try
             {
-                photo.Name = photo.File.FileName;
-                photo.Extension = Path.GetExtension(photo.File.FileName);
-                photo.MimeType = photo.File.ContentType;
-                photo.Hash = Guid.NewGuid().ToString("N");
+                IFormFileCollection files = Request.Form.Files;
 
-                Album album = await _context.Album.FindAsync(photo.AlbumId);
+                Request.Form.TryGetValue("albumId", out var albumId);
 
-                this.UploadFile(photo.File, photo.Hash, album.Hash);
+                Album album = await _context.Album.FindAsync(Int64.Parse(albumId));
 
-                _context.Photo.Add(photo);
+                foreach (IFormFile file in files)
+                {
+                    Photo photo = new Photo
+                    { 
+                        Name = Path.GetFileNameWithoutExtension(file.FileName),
+                        Extension = Path.GetExtension(file.FileName),
+                        MimeType = file.ContentType,
+                        Hash = Guid.NewGuid().ToString("N"),
+                        AlbumId = album.Id
+                    };
 
-                await _context.SaveChangesAsync();
+                    this.UploadFile(file, photo.Hash, album.Hash);
 
-                return CreatedAtAction("GetPhoto", new { id = photo.Id }, photo);
+                    _context.Photo.Add(photo);
+                    
+                    await _context.SaveChangesAsync();
+                }
+
+                return StatusCode(StatusCodes.Status201Created);
             }
             catch (Exception ex)
             {

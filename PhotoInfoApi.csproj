@@ -5,6 +5,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="38d2d468d0394a3290768e6b16f4afcc\**" />
+    <Content Remove="38d2d468d0394a3290768e6b16f4afcc\**" />
+    <EmbeddedResource Remove="38d2d468d0394a3290768e6b16f4afcc\**" />
+    <None Remove="38d2d468d0394a3290768e6b16f4afcc\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Cors" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Cors" Version="2.2.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.10" />

@@ -11,7 +11,7 @@ namespace PhotoInfoApi.Models
     public class Album
     {
         [Key]
-        public long Id { get; internal set; }
+        public long Id { get; set; }
         public string Name { get; set; }
         [JsonIgnore]
         public string Hash { get; internal set; }

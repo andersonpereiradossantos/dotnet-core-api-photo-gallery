@@ -73,6 +73,7 @@ namespace PhotoInfoApi.Controllers
             }
 
             _context.Entry(album).State = EntityState.Modified;
+            _context.Entry(album).Property(x => x.Hash).IsModified = false;
 
             try
             {

@@ -64,7 +64,7 @@ namespace PhotoInfoApi
             {
                 opts.WithOrigins(new string[]
                 {
-                    "http://localhost:4200"
+                    "http://localhost:443"
                 });
 
                 opts.AllowAnyHeader();

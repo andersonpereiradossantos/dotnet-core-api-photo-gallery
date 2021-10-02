@@ -12,7 +12,7 @@ namespace PhotoInfoApi.Models
     public class Photo
     {
         [Key]
-        public long Id { get; internal set; }
+        public long Id { get; set; }
         public string Name { get; set; }
         public DateTime DateCreate { get; internal set; } = DateTime.Now;
         [JsonIgnore]
