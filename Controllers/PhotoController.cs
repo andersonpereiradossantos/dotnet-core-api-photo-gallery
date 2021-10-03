@@ -105,11 +105,11 @@ namespace PhotoInfoApi.Controllers
 
         // PUT: api/Photo/5
         [HttpPut("SetCoverAlbum/{id}")]
-        public async Task<IActionResult> SetCoverAlbum(long id)
+        public async Task<IActionResult> SetCoverAlbum(long id, Photo photo)
         {                        
             try
             {
-                Photo photoOld = await _context.Photo.Where(x=>x.Cover == true).FirstOrDefaultAsync();
+                Photo photoOld = await _context.Photo.Where(x=>x.Cover == true).Where(x=>x.AlbumId == photo.AlbumId).FirstOrDefaultAsync();
                 
                 if(photoOld != null)
                 {
