@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using PhotoInfoApi.Models;
+using DotnetCoreApiPhotoGallery.Models;
 
-namespace PhotoInfoApi.Migrations
+namespace DotnetCoreApiPhotoGallery.Migrations
 {
     [DbContext(typeof(ApiDbContext))]
     [Migration("20210925230621_Initial")]
@@ -19,7 +19,7 @@ namespace PhotoInfoApi.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 64)
                 .HasAnnotation("ProductVersion", "5.0.10");
 
-            modelBuilder.Entity("PhotoInfoApi.Models.Album", b =>
+            modelBuilder.Entity("DotnetCoreApiPhotoGallery.Models.Album", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -39,7 +39,7 @@ namespace PhotoInfoApi.Migrations
                     b.ToTable("Album");
                 });
 
-            modelBuilder.Entity("PhotoInfoApi.Models.Photo", b =>
+            modelBuilder.Entity("DotnetCoreApiPhotoGallery.Models.Photo", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -70,16 +70,16 @@ namespace PhotoInfoApi.Migrations
                     b.ToTable("Photo");
                 });
 
-            modelBuilder.Entity("PhotoInfoApi.Models.Photo", b =>
+            modelBuilder.Entity("DotnetCoreApiPhotoGallery.Models.Photo", b =>
                 {
-                    b.HasOne("PhotoInfoApi.Models.Album", null)
+                    b.HasOne("DotnetCoreApiPhotoGallery.Models.Album", null)
                         .WithMany("Photos")
                         .HasForeignKey("AlbumId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("PhotoInfoApi.Models.Album", b =>
+            modelBuilder.Entity("DotnetCoreApiPhotoGallery.Models.Album", b =>
                 {
                     b.Navigation("Photos");
                 });

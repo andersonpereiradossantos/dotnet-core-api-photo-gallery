@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace PhotoInfoApi.Models
+namespace DotnetCoreApiPhotoGallery.Models
 {
     public class ApiDbContext : DbContext
     {

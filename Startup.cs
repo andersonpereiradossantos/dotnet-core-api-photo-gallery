@@ -8,13 +8,13 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
-using PhotoInfoApi.Models;
+using DotnetCoreApiPhotoGallery.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace PhotoInfoApi
+namespace DotnetCoreApiPhotoGallery
 {
     public class Startup
     {
@@ -42,10 +42,6 @@ namespace PhotoInfoApi
             }));
 
             services.AddControllers();
-            services.AddSwaggerGen(c =>
-            {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "PhotoInfoApi", Version = "v1" });
-            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -54,11 +50,7 @@ namespace PhotoInfoApi
             if (!env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-                app.UseSwagger();
-                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "PhotoInfoApi v1"));
             }
-
-            //app.UseCors("MyPolicy");
 
             app.UseCors(opts =>
             {

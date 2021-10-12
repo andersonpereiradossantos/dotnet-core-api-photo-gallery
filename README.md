@@ -1,5 +1,5 @@
 ﻿# .NET Core API Photo Gallery
-[![LICENCE](https://img.shields.io/npm/l/react)](https://github.com/andersonpereiradossantos/dotnet-core-api-photo-gallery/blob/main/LICENSE)
+[![LICENCE](https://img.shields.io/npm/l/react)](https://github.com/andersonpereiradossantos/DotnetCoreApiPhotoGallery/blob/main/LICENSE)
 
 ## About code
 
@@ -29,14 +29,14 @@ Prerequisites: .NET Core 5 or higher.
 
 ```powershell
 # Clone repository
-git clone https://github.com/andersonpereiradossantos/dotnet-core-api-photo-gallery.git
+git clone https://github.com/andersonpereiradossantos/DotnetCoreApiPhotoGallery.git
 
 # Create a folder called wwwroot in the root of your project and a folder called upload within it;
 
 # Change your local database connection string in appsettings.json;
 
 # Restore nuget dependencies:
-PM> Update-Package -Reinstall -ProjectName PhotoInfoApi
+PM> Update-Package -Reinstall -ProjectName DotnetCoreApiPhotoGallery
 
 # Run the migrations to create the database structure:
 PM> update-database

@@ -9,9 +9,11 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using PhotoInfoApi.Models;
+using DotnetCoreApiPhotoGallery.Models;
+using ExifPhotoReader;
 
-namespace PhotoInfoApi.Controllers
+
+namespace DotnetCoreApiPhotoGallery.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -245,7 +247,7 @@ namespace PhotoInfoApi.Controllers
         {
             try
             {
-                var photo = await _context.Photo
+                Photo photo = await _context.Photo
                     .Include(x => x.Album)
                     .FirstOrDefaultAsync(x => x.Id == id);
 
@@ -257,25 +259,38 @@ namespace PhotoInfoApi.Controllers
                 }
 
                 if (!PhotoExists(id))
-                {
                     return NotFound();
-                }
-                else
-                {
-                    MemoryStream memory = new MemoryStream();
-                    using (var stream = new FileStream(file, FileMode.Open))
-                    {
-                        await stream.CopyToAsync(memory);
-                    }
-                    memory.Position = 0;
 
-                    return File(memory, GetExtension()[photo.Extension.ToLower()], photo.Name);
+                MemoryStream memory = new MemoryStream();
+                using (var stream = new FileStream(file, FileMode.Open))
+                {
+                    await stream.CopyToAsync(memory);
                 }
+                memory.Position = 0;
+
+                return File(memory, GetExtension()[photo.Extension.ToLower()], photo.Name);
             }
             catch (Exception ex)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
             }
+        }
+
+        [HttpGet("Properties/{id}")]
+        public async Task<ActionResult<ExifImageProperties>> GetProperties(long Id)
+        {
+            Photo photo = await _context.Photo
+                .Include(x => x.Album)
+                .FirstOrDefaultAsync(x => x.Id == Id);
+
+            if (photo == null)
+                return NotFound();
+
+            string file = $"{path}{photo.Album.Hash}\\{photo.Hash}";
+
+            ExifImageProperties exifImage = ExifPhoto.GetExifDataPhoto(file);
+
+            return exifImage;
         }
 
         private Dictionary<string, string> GetExtension()
@@ -288,6 +303,14 @@ namespace PhotoInfoApi.Controllers
                 {".gif", "image/gif" },
                 {".tiff", "image/tiff" }
             };
+        }
+
+        public record ExifProperties()
+        {
+           public int ISO { get; set; }
+           public string ShutterSpeedValue {  get; set; }
+           public string MaxApertureValue {  get; set; }
+
         }
     }
 }

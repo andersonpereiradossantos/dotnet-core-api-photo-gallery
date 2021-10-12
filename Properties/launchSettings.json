@@ -12,13 +12,12 @@
     "IIS Express": {
       "commandName": "IISExpress",
       "launchBrowser": true,
-      //"launchUrl": "swagger",
       "launchUrl": "api/album",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
-    "PhotoInfoApi": {
+    "DotnetCoreApiPhotoGallery": {
       "commandName": "Project",
       "dotnetRunMessages": "true",
       "launchBrowser": true,

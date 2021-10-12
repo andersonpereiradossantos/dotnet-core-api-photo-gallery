@@ -8,9 +8,9 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using PhotoInfoApi.Models;
+using DotnetCoreApiPhotoGallery.Models;
 
-namespace PhotoInfoApi.Controllers
+namespace DotnetCoreApiPhotoGallery.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
